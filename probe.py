@@ -3,25 +3,25 @@ def get(u):
     req = urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.load(r)
-today = datetime.date.today()
-rng = f"{today:%Y%m%d}-{today + datetime.timedelta(days=300):%Y%m%d}"
-for lg in ["tur.1", "uefa.europa", "tur.cup", "tur.super_cup"]:
-    u = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{lg}/scoreboard?dates={rng}&limit=1000"
-    try:
-        d = get(u)
-    except Exception as e:
-        print(lg, "ERROR", e); continue
+def show(e, full=False):
+    c = e["competitions"][0]
+    teams = " vs ".join(f'{t["homeAway"]}:{t["team"]["displayName"]}' for t in c["competitors"])
+    st = (c.get("status") or e.get("status") or {}).get("type", {})
+    print(" ", e["id"], e["date"], "tv=", c.get("timeValid"), e.get("timeValid"), st.get("name"), st.get("detail"), teams, "|", (e.get("league") or c.get("league") or {}).get("name") if isinstance(e.get("league") or c.get("league"), dict) else e.get("season",{}).get("slug"))
+    if full: print(json.dumps(e, ensure_ascii=False)[:3000])
+B = "https://site.api.espn.com/apis/site/v2/sports/soccer"
+for lg in ["all", "tur.1", "uefa.europa", "tur.cup"]:
+    u = f"{B}/{lg}/teams/1895/schedule?fixture=true"
+    try: d = get(u)
+    except Exception as ex: print(lg, "schedule ERROR", ex); continue
     evs = d.get("events", [])
-    bjk = [e for e in evs if "besiktas" in json.dumps(e.get("competitions", [{}])[0].get("competitors", []), ensure_ascii=True).lower()]
-    print(f"== {lg}: {len(evs)} events, {len(bjk)} Besiktas, league={d.get('leagues',[{}])[0].get('name')}")
-    for e in bjk[:40]:
-        c = e["competitions"][0]
-        teams = " vs ".join(f'{t["homeAway"]}:{t["team"]["displayName"]}' for t in c["competitors"])
-        print(e["id"], e["date"], "timeValid=", c.get("timeValid"), e.get("timeValid"), e["status"]["type"]["name"], e["status"]["type"].get("detail"), teams, "|", c.get("venue",{}).get("fullName"))
-    if bjk:
-        print(json.dumps(bjk[0], ensure_ascii=False)[:2500])
-try:
-    d = get("https://site.api.espn.com/apis/site/v2/sports/soccer/tur.1/teams")
-    for t in d["sports"][0]["leagues"][0]["teams"]:
-        if "besik" in t["team"]["displayName"].lower().replace("ş","s"): print("TEAM", t["team"]["id"], t["team"]["displayName"])
-except Exception as e: print("teams ERROR", e)
+    print(f"== schedule {lg}: {len(evs)} events")
+    for i, e in enumerate(evs[:60]): show(e, full=(i == 0 and lg == "tur.1"))
+today = datetime.date.today()
+for lg in ["tur.1", "uefa.europa"]:
+    rng = f"{today:%Y%m%d}-{today + datetime.timedelta(days=60):%Y%m%d}"
+    try: d = get(f"{B}/{lg}/scoreboard?dates={rng}&limit=500")
+    except Exception as ex: print(lg, "scoreboard ERROR", ex); continue
+    evs = [e for e in d.get("events", []) if "1895" in [t["team"]["id"] for t in e["competitions"][0]["competitors"]]]
+    print(f"== scoreboard {lg} {rng}: {len(d.get('events',[]))} total, {len(evs)} bjk")
+    for e in evs: show(e)
