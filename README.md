@@ -4,8 +4,10 @@ Telefon takvimine abone olmak için:
 
     https://raw.githubusercontent.com/volkancaglarselanik-sketch/besiktas-mac-takvimi/main/besiktas.ics
 
-- `besiktas.ics`: abonelik dosyası (her maça 2 hatırlatma)
-- `fikstur.html`: maç verisi (`id="state"` içindeki JSON)
-- `make_ics.py`: `python3 make_ics.py besiktas.ics` ile dosyayı yeniden üretir
+GitHub Actions günde 3 kez ESPN'den Beşiktaş'ın tüm maçlarını (Süper Lig, Avrupa kupaları, kupa) çeker
+ve `besiktas.ics` dosyasını günceller. Telefon aboneliği yenilediğinde yeni tarih ve saatler kendiliğinden gelir.
 
-Saatler Türkiye saatidir (TSİ). Saati açıklanmamış maçlar tüm gün etkinliği olarak görünür.
+- Saati belli maçlar: 1 gün ve 1 saat önce uyarı.
+- Saati açıklanmamış maçlar: tüm gün etkinliği; önceki akşam 20:00 ve maç günü 10:00 uyarı.
+- Veri alınamazsa dosya değiştirilmez ve çalıştırma başarısız görünür (Actions sekmesi).
+- iPhone'da abonelik ayarlarında "Uyarıları Sil" kapalı olmalı, yoksa uyarılar çalmaz.
